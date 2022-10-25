@@ -1,35 +1,45 @@
-function createPromise(position, delay) {
-  const shouldResolve = Math.random() > 0.3;
-  if (shouldResolve) {
-    // Fulfill
-  } else {
-    // Reject
+import Notiflix from 'notiflix';
+
+const formRef = document.querySelector('form');
+
+formRef.addEventListener('submit', onSubmit);
+
+function onSubmit(e) {
+  e.preventDefault();
+  let delay = Number(formRef[0].value);
+  let step = Number(formRef[1].value);
+  let amount = Number(formRef[2].value);
+
+  if (delay <= 0 || step <= 0 || amount <= 0) {
+    Notiflix.Notify.info('Enter a positive numbers.');
+    return;
+  }
+
+  for (let position = 1; position <= amount; position += 1) {
+    createPromise(position, delay)
+      .then(({ position, delay }) => {
+        Notiflix.Notify.success(
+          `✅ Fulfilled promise ${position} in ${delay}ms`
+        );
+      })
+      .catch(({ position, delay }) => {
+        Notiflix.Notify.failure(
+          `❌ Rejected promise ${position} in ${delay}ms`
+        );
+      });
+    delay += step;
   }
 }
-const NOTIFICATION_DELAY = 3000; //Через скільки закривати
-let timeoutId = null; //Потрібно ставити null, хороший тон
 
-const refs = {
-  notification: document.querySelector('.js-alert'),
-};
-
-refs.notification.addEventListener('click', onNotificationClick);
-
-showNotification();
-
-function onNotificationClick() {
-  hideNotification();
-  clearTimeout(timeoutId);
-}
-
-function showNotification() {
-  refs.notification.classList.add('is-visible');
-
-  timeoutId = setTimeout(() => {
-    hideNotification();
-  }, NOTIFICATION_DELAY);
-}
-
-function hideNotification() {
-  refs.notification.classList.remove('is-visible');
+function createPromise(position, delay) {
+  const shouldResolve = Math.random() > 0.3;
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (shouldResolve) {
+        resolve({ position, delay });
+      } else {
+        reject({ position, delay });
+      }
+    }, delay);
+  });
 }
